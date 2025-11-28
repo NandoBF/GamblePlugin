@@ -1,0 +1,9 @@
+name: GambleOrCancer
+version: '1.0-SNAPSHOT'
+main: me.nabattis.gambleOrCancer.GambleOrCancer
+api-version: '1.21'
+
+commands:
+  roll:
+    description: Rolls a number from 0 to 20
+    usage: /roll

@@ -54,12 +54,16 @@ public class GamblingHandler {
         if (isRunning && playerCount < MINIMUM_PLAYERS){
             plugin.getLogger().info("Players left. Stopping gambling");
             stop();
-            // Stop the game if player count drops below 2
-        } else if (!isRunning && playerCount >= 1){
+            //
+            // Stop the game if player count drops below MINIMUM_PLAYERS
+        } else if (!isRunning && playerCount >= MINIMUM_PLAYERS){
             // Start if there are enough players
             plugin.getLogger().info("Enough players! Starting gambling game");
             start();
+        } else {
+            plugin.getLogger().info("Not enough players. Pausing gambler");
         }
+
     }
 
 

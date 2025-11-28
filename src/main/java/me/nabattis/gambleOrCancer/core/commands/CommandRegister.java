@@ -1,10 +1,11 @@
 package me.nabattis.gambleOrCancer.core.commands;
 
+import com.mojang.brigadier.arguments.LongArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import me.nabattis.gambleOrCancer.GambleOrCancer;
-import me.nabattis.gambleOrCancer.core.GamblingHandler;
 
+import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
 public class CommandRegister {
@@ -29,9 +30,41 @@ public class CommandRegister {
                             .build(),
                     "Toggles the gambling"
             );
+
+            registerSettingsCommands(commands);
         });
-
-
     }
 
+    private void registerSettingsCommands(Commands commands){
+        commands.register(literal("goc-settings")
+                .requires(source -> source.getSender().hasPermission("minecraft.command.kill"))
+                .then(Commands.literal("time_between_sessions")
+                        .then(argument("seconds", LongArgumentType.longArg(30))
+                                .executes(context -> {
+                                long input = context.getArgument("seconds", Long.class);
+                                plugin.getGamblingHandler().setTimeBetweenSessions(input, context.getSource().getSender());
+                                return 1;
+                                })
+                        )
+                )
+                .then(Commands.literal("time_until_warn")
+                        .then(argument("seconds", LongArgumentType.longArg(5))
+                                .executes(context -> {
+                                long input = context.getArgument("seconds", Long.class);
+                                plugin.getGamblingHandler().setTimeUntilWarn(input, context.getSource().getSender());
+                                return 1;
+                                })
+                        )
+                )
+                .then(Commands.literal("time_after_warn")
+                        .then(argument("seconds", LongArgumentType.longArg(2))
+                                .executes(context -> {
+                                    long input = context.getArgument("seconds", Long.class);
+                                    plugin.getGamblingHandler().setTimeAfterWarn(input, context.getSource().getSender());
+                                    return 1;
+                                })
+                        )
+                )
+                .build());
+    }
 }

@@ -15,6 +15,8 @@ public final class GambleOrCancer extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
+        saveDefaultConfig();
+
         deathListener = new GamblingListener(this);
         this.commandRegister = new CommandRegister(this);
         this.gamblingHandler = new GamblingHandler(this, deathListener);

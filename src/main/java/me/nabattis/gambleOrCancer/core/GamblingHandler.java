@@ -7,19 +7,23 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
+import static net.kyori.adventure.text.Component.text;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class GamblingHandler {
-    private static final long GAMBLING_TIMER = 20*30;
-    private static final long TIME_UNTIL_WARN = 20*10;
-    private static final long TIME_AFTER_WARN = 20*5;
-    private static int MINIMUM_PLAYERS = 1;
+    private static long TIME_BETWEEN_SESSIONS;
+    private static long TIME_BETWEEN_SESSIONS_DEF;
+    private static long TIME_UNTIL_WARN;
+    private static long TIME_AFTER_WARN;
+    private static int MINIMUM_PLAYERS;
 
     // Player UUID -> currentRoll
     private final HashMap<Player, Integer> rollsMap = new HashMap<>();
@@ -34,6 +38,11 @@ public class GamblingHandler {
     public GamblingHandler(GambleOrCancer plugin, GamblingListener deathListener){
         this.plugin = plugin;
         this.deathListener = deathListener;
+        TIME_BETWEEN_SESSIONS = plugin.getConfig().getLong("root.time_between_sessions", 300) * 20L;
+        TIME_BETWEEN_SESSIONS_DEF = TIME_BETWEEN_SESSIONS;
+        TIME_UNTIL_WARN = plugin.getConfig().getLong("root.time_until_warn", 20) * 20L;
+        TIME_AFTER_WARN = plugin.getConfig().getLong("root.time_after_warn", 7) * 20L;
+        MINIMUM_PLAYERS = plugin.getConfig().getInt("root.minimum_players_online", 2);
     }
 
     public void checkGameStatus(){
@@ -57,22 +66,34 @@ public class GamblingHandler {
     public void start() {
         if (isRunning) return; // This shouldn't happen
         isRunning = true;
+        rollsMap.clear();
+
+        // Revert to default since it was probably changed by the random sum
+        TIME_BETWEEN_SESSIONS = TIME_BETWEEN_SESSIONS_DEF;
+
+        TIME_BETWEEN_SESSIONS += ThreadLocalRandom.current().nextInt((int) (TIME_BETWEEN_SESSIONS * 0.1f), (int)(TIME_BETWEEN_SESSIONS*0.5));
+        if (TIME_BETWEEN_SESSIONS <= 0) TIME_BETWEEN_SESSIONS = Long.MAX_VALUE; // get fcked
+
+        plugin.getLogger().info("Next session in " + TIME_BETWEEN_SESSIONS/20L);
         currentTask = plugin.getServer().getScheduler().runTaskLater(
-                plugin, this::startGamblingSession, GAMBLING_TIMER
+                plugin, this::startGamblingSession, TIME_BETWEEN_SESSIONS
         );
     }
 
 
     public void registerPlayerRoll(Player player, int numberRolled){
         if (rollsMap.containsKey(player)) {
-            player.sendMessage(Component.text(" You have already rolled! ",
-                    NamedTextColor.RED));
+            final Component component =
+                    text(" You have already rolled! ",
+                    NamedTextColor.RED);
+            player.sendMessage(component);
             return;
         }
-        plugin.getServer().broadcast(Component.text(
-                player.getName() + " rolled a " + numberRolled,
-                NamedTextColor.GOLD
-        ));
+        final Component component =
+                text(player.getName() + " rolled a " + numberRolled,
+                        NamedTextColor.GOLD
+                );
+        plugin.getServer().broadcast(component);
         rollsMap.put(player, numberRolled);
     }
 
@@ -80,7 +101,7 @@ public class GamblingHandler {
         if (!gamblingEnabled) return; // just a failsafe
 
         Bukkit.broadcast(Component.text(
-                "Let's get gambling! You have " + (TIME_UNTIL_WARN + TIME_AFTER_WARN)/20 + " seconds use /roll",
+                "Let's get gambling! You have " + (TIME_UNTIL_WARN + TIME_AFTER_WARN)/20 + " to seconds use /roll",
                 NamedTextColor.AQUA
         ));
 
@@ -96,6 +117,10 @@ public class GamblingHandler {
                 player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 777, 7));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 777, 2));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 777, 3));
+                final Component component =
+                        text("Those who don't roll get punished!",
+                                NamedTextColor.RED);
+                player.sendMessage(component);
             }
         }
 
@@ -185,5 +210,31 @@ public class GamblingHandler {
                 gamblingEnabled ? NamedTextColor.GREEN : NamedTextColor.RED));
 
         checkGameStatus();
+    }
+
+    public void setTimeBetweenSessions(long input, CommandSender sender){
+        TIME_BETWEEN_SESSIONS = input * 20L;
+        TIME_BETWEEN_SESSIONS_DEF = TIME_BETWEEN_SESSIONS;
+        plugin.getConfig().set("root.time_between_sessions", input);
+        plugin.saveConfig();
+        sender.sendMessage(Component.text("Time between sessions changed to " + input + " seconds!",
+                NamedTextColor.GRAY));
+    }
+
+    public void setTimeUntilWarn(long input, CommandSender sender) {
+        TIME_UNTIL_WARN = input * 20L;
+        plugin.getConfig().set("root.time_until_warn", input);
+        plugin.saveConfig();
+        sender.sendMessage(Component.text("Time until warning changed to " + input + " seconds!",
+                NamedTextColor.GRAY));
+    }
+
+    public void setTimeAfterWarn(long input, CommandSender sender) {
+        TIME_AFTER_WARN = input * 20L;
+        plugin.getConfig().set("root.time_after_warn", input);
+        plugin.saveConfig();
+
+        sender.sendMessage(Component.text("Time to roll after warning changed to " + input + " seconds!",
+                NamedTextColor.GRAY));
     }
 }

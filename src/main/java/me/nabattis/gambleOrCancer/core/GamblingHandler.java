@@ -24,9 +24,11 @@ public class GamblingHandler {
     private static long TIME_UNTIL_WARN;
     private static long TIME_AFTER_WARN;
     private static int MINIMUM_PLAYERS;
+    private static long AFK_TIME;
 
     // Player UUID -> currentRoll
     private final HashMap<Player, Integer> rollsMap = new HashMap<>();
+    private final ArrayList<Player> playersRolling = new ArrayList<>();
     private final GambleOrCancer plugin;
     private final GamblingListener deathListener;
     private boolean isRunning = false;
@@ -43,6 +45,7 @@ public class GamblingHandler {
         TIME_UNTIL_WARN = plugin.getConfig().getLong("root.time_until_warn", 20) * 20L;
         TIME_AFTER_WARN = plugin.getConfig().getLong("root.time_after_warn", 7) * 20L;
         MINIMUM_PLAYERS = plugin.getConfig().getInt("root.minimum_players_online", 2);
+        AFK_TIME = plugin.getConfig().getLong("root.afk_time", 10L);
     }
 
     public void checkGameStatus(){
@@ -71,6 +74,7 @@ public class GamblingHandler {
         if (isRunning) return; // This shouldn't happen
         isRunning = true;
         rollsMap.clear();
+        playersRolling.clear();
 
         // Revert to default since it was probably changed by the random sum
         TIME_BETWEEN_SESSIONS = TIME_BETWEEN_SESSIONS_DEF;
@@ -92,7 +96,14 @@ public class GamblingHandler {
                     NamedTextColor.RED);
             player.sendMessage(component);
             return;
+        } else if (!playersRolling.contains(player)){
+            final Component component =
+                    text(" You are not participating in this session! ",
+                            NamedTextColor.YELLOW);
+            player.sendMessage(component);
+            return;
         }
+
         final Component component =
                 text(player.getName() + " rolled a " + numberRolled,
                         NamedTextColor.GOLD
@@ -103,6 +114,19 @@ public class GamblingHandler {
 
     private void startGamblingSession(){
         if (!gamblingEnabled) return; // just a failsafe
+
+        // Add players participating
+        // This allows players to be afk without fear of being killed
+        playersRolling.addAll(plugin.getServer().getOnlinePlayers().stream()
+                .filter(p -> p.getIdleDuration().toSeconds() <= AFK_TIME).toList());
+
+        // Stop the game if not enough players are playing their fun lil game
+        if (playersRolling.size() < MINIMUM_PLAYERS){
+            plugin.getLogger().info("Not enough players not AFK! Stopping new session.");
+            isRunning = false;
+            start();
+            return;
+        }
 
         Bukkit.broadcast(Component.text(
                 "Let's get gambling! You have " + (TIME_UNTIL_WARN + TIME_AFTER_WARN)/20 + " to seconds use /roll",
@@ -116,7 +140,7 @@ public class GamblingHandler {
 
     private void warnPlayers(){
         // give mega cancer
-        for (Player player : plugin.getServer().getOnlinePlayers()) {
+        for (Player player : playersRolling) {
             if (!rollsMap.containsKey(player)){
                 player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 777, 7));
                 player.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 777, 2));
@@ -137,7 +161,7 @@ public class GamblingHandler {
         ArrayList<Player> playersToKill = new ArrayList<>();
         if (!rollsMap.isEmpty()){
             // Add to playersToKill the players that didn't roll
-            for (Player player : plugin.getServer().getOnlinePlayers()) {
+            for (Player player : playersRolling) {
                 if (!rollsMap.containsKey(player)){
                     playersToKill.add(player);
                     plugin.getServer().broadcast(Component.text(
@@ -164,7 +188,7 @@ public class GamblingHandler {
             float pitch = 1.0f + (i * 0.5f);//change pitch between sounds
 
             plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-                for (Player p : plugin.getServer().getOnlinePlayers()) {
+                for (Player p : playersRolling) {
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, pitch);
                 }}, delay);
         }
@@ -175,7 +199,7 @@ public class GamblingHandler {
     private void executeLosers(ArrayList<Player> playersToKill){
         isRunning = false;
         // Tell the deathListener who we're going to kill
-        if (plugin.getServer().getOnlinePlayers().size() < MINIMUM_PLAYERS){
+        if (playersRolling.size() < MINIMUM_PLAYERS){
             stop();
             return;
         }
@@ -196,6 +220,7 @@ public class GamblingHandler {
             currentTask.cancel();
         }
         rollsMap.clear();
+        playersRolling.clear();
         plugin.getLogger().info("Stopping the gambler!");
     }
 
@@ -205,7 +230,7 @@ public class GamblingHandler {
                 "No one rolled rolled! Public execution in 3 seconds",
                 NamedTextColor.RED
         ));
-        playersToKill.addAll(plugin.getServer().getOnlinePlayers());
+        playersToKill.addAll(playersRolling);
     }
 
     public void toggle(CommandSender sender){

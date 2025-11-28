@@ -23,7 +23,7 @@ public class RollCommand implements CommandExecutor {
             commandSender.sendMessage("Only players can take their shot at gambling!");
             return true;
         }
-        int rolled = ThreadLocalRandom.current().nextInt(21);
+        int rolled = ThreadLocalRandom.current().nextInt(1,21);
         gamblingHandler.registerPlayerRoll(player, rolled);
         return true;
     }

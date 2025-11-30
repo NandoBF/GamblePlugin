@@ -1,15 +1,15 @@
-package me.nabattis.gambleOrCancer.core.commands;
+package me.nabattis.rollOrDie.core.commands;
 
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
-import me.nabattis.gambleOrCancer.core.GamblingHandler;
+import me.nabattis.rollOrDie.core.RollingHandler;
 import org.jspecify.annotations.Nullable;
 
 public class StateCommand implements BasicCommand {
-    private GamblingHandler gamblingHandler;
+    private RollingHandler rollingHandler;
 
-    public StateCommand(GamblingHandler gh){
-        this.gamblingHandler = gh;
+    public StateCommand(RollingHandler gh){
+        this.rollingHandler = gh;
     }
 
     @Override

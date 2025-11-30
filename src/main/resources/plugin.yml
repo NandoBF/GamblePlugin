@@ -1,9 +1,9 @@
-name: GambleOrCancer
-version: '1.1'
-main: me.nabattis.gambleOrCancer.GambleOrCancer
+name: RollOrDie
+version: '1.2'
+main: me.nabattis.rollOrDie.RollOrDie
 api-version: '1.21'
 
 commands:
-  roll:
+  gamba:
     description: Rolls a number from 0 to 20
-    usage: /roll
+    usage: /gamba

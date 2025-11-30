@@ -1,17 +1,17 @@
-package me.nabattis.gambleOrCancer.core.commands;
+package me.nabattis.rollOrDie.core.commands;
 
 import com.mojang.brigadier.arguments.LongArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import me.nabattis.gambleOrCancer.GambleOrCancer;
+import me.nabattis.rollOrDie.RollOrDie;
 
 import static io.papermc.paper.command.brigadier.Commands.argument;
 import static io.papermc.paper.command.brigadier.Commands.literal;
 
 public class CommandRegister {
-    private final GambleOrCancer plugin;
+    private final RollOrDie plugin;
 
-    public CommandRegister(GambleOrCancer plugin){
+    public CommandRegister(RollOrDie plugin){
         this.plugin = plugin;
     }
 
@@ -36,7 +36,7 @@ public class CommandRegister {
     }
 
     private void registerSettingsCommands(Commands commands){
-        commands.register(literal("goc-settings")
+        commands.register(literal("rod-settings")
                 .requires(source -> source.getSender().hasPermission("minecraft.command.kill"))
                 .then(Commands.literal("time_between_sessions")
                         .then(argument("seconds", LongArgumentType.longArg(30))

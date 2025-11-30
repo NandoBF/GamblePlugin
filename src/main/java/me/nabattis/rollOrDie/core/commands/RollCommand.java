@@ -1,6 +1,6 @@
-package me.nabattis.gambleOrCancer.core.commands;
+package me.nabattis.rollOrDie.core.commands;
 
-import me.nabattis.gambleOrCancer.core.GamblingHandler;
+import me.nabattis.rollOrDie.core.RollingHandler;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -10,11 +10,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class RollCommand implements CommandExecutor {
-    private final GamblingHandler gamblingHandler;
+    private final RollingHandler rollingHandler;
 
 
-    public RollCommand(GamblingHandler handler){
-        this.gamblingHandler = handler;
+    public RollCommand(RollingHandler handler){
+        this.rollingHandler = handler;
     }
 
     @Override
@@ -24,7 +24,7 @@ public class RollCommand implements CommandExecutor {
             return true;
         }
         int rolled = ThreadLocalRandom.current().nextInt(1,21);
-        gamblingHandler.registerPlayerRoll(player, rolled);
+        rollingHandler.registerPlayerRoll(player, rolled);
         return true;
     }
 }

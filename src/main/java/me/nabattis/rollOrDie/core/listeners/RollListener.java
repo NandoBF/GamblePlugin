@@ -1,10 +1,9 @@
-package me.nabattis.gambleOrCancer.core.listeners;
+package me.nabattis.rollOrDie.core.listeners;
 
-import me.nabattis.gambleOrCancer.GambleOrCancer;
-import me.nabattis.gambleOrCancer.core.GamblingHandler;
+import me.nabattis.rollOrDie.RollOrDie;
+import me.nabattis.rollOrDie.core.RollingHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -15,11 +14,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class GamblingListener implements Listener {
+public class RollListener implements Listener {
     private final ArrayList<UUID> pendingDeaths = new ArrayList<>();
-    private final GambleOrCancer plugin;
+    private final RollOrDie plugin;
 
-    public GamblingListener(GambleOrCancer plugin){
+    public RollListener(RollOrDie plugin){
         this.plugin = plugin;
     }
 
@@ -49,9 +48,9 @@ public class GamblingListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event){
-        GamblingHandler gh = plugin.getGamblingHandler();
+        RollingHandler gh = plugin.getGamblingHandler();
        plugin.getServer().getScheduler().runTaskLater(
-                JavaPlugin.getProvidingPlugin(GamblingListener.class),
+                JavaPlugin.getProvidingPlugin(RollListener.class),
                 gh::checkGameStatus,
                 1L
         );

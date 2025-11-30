@@ -1,13 +1,12 @@
-package me.nabattis.gambleOrCancer.core;
+package me.nabattis.rollOrDie.core;
 
-import me.nabattis.gambleOrCancer.GambleOrCancer;
-import me.nabattis.gambleOrCancer.core.listeners.GamblingListener;
+import me.nabattis.rollOrDie.RollOrDie;
+import me.nabattis.rollOrDie.core.listeners.RollListener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -18,7 +17,7 @@ import static net.kyori.adventure.text.Component.text;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class GamblingHandler {
+public class RollingHandler {
     private static long TIME_BETWEEN_SESSIONS;
     private static long TIME_BETWEEN_SESSIONS_DEF;
     private static long TIME_UNTIL_WARN;
@@ -29,15 +28,15 @@ public class GamblingHandler {
     // Player UUID -> currentRoll
     private final HashMap<Player, Integer> rollsMap = new HashMap<>();
     private final ArrayList<Player> playersRolling = new ArrayList<>();
-    private final GambleOrCancer plugin;
-    private final GamblingListener deathListener;
+    private final RollOrDie plugin;
+    private final RollListener deathListener;
     private boolean isRunning = false;
 
     private BukkitTask currentTask;
     private boolean gamblingEnabled = true;
 
 
-    public GamblingHandler(GambleOrCancer plugin, GamblingListener deathListener){
+    public RollingHandler(RollOrDie plugin, RollListener deathListener){
         this.plugin = plugin;
         this.deathListener = deathListener;
         TIME_BETWEEN_SESSIONS = plugin.getConfig().getLong("root.time_between_sessions", 300) * 20L;
@@ -129,7 +128,7 @@ public class GamblingHandler {
         }
 
         Bukkit.broadcast(Component.text(
-                "Let's get gambling! You have " + (TIME_UNTIL_WARN + TIME_AFTER_WARN)/20 + " to seconds use /roll",
+                "Let's get gambling! You have " + (TIME_UNTIL_WARN + TIME_AFTER_WARN)/20 + " to seconds use /gamba",
                 NamedTextColor.AQUA
         ));
 
@@ -193,6 +192,11 @@ public class GamblingHandler {
                 }}, delay);
         }
 
+        for (Player player : playersRolling) {
+            player.removePotionEffect(PotionEffectType.BLINDNESS);
+            player.removePotionEffect(PotionEffectType.NAUSEA);
+            player.removePotionEffect(PotionEffectType.SLOWNESS);
+        }
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> executeLosers(playersToKill), 60L);
     }
 

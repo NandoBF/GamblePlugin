@@ -1,5 +1,5 @@
 root:
-  time_between_sessions: 300
+  time_between_sessions: 400
   time_until_warn: 20
   time_after_warn: 10
   # Time to wait to consider players AFK
